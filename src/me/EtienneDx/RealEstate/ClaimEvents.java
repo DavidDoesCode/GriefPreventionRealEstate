@@ -74,7 +74,8 @@ public class ClaimEvents {
                 if (tr != null &&
                         tr instanceof BoughtTransaction &&
                         ((BoughtTransaction) tr).getBuyer() != null) {
-                    return Messages.getMessage(RealEstate.instance.messages.msgErrorSubclaimInTransaction);
+//                    return Messages.getMessage(RealEstate.instance.messages.msgErrorSubclaimInTransaction);
+                    player.sendMessage("$cA subclaim is currently involved in a transaction. Respect the agreements!");
                 }
             }
         }

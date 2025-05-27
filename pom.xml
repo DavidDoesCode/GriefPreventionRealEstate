@@ -18,7 +18,7 @@
 				<targetPath>.</targetPath>
 				<includes>
 					<include>plugin.yml</include>
-					<include>paper-plugin.yml</include>
+<!--					<include>paper-plugin.yml</include>-->
 				</includes>
 			</resource>
 			<resource>
@@ -133,7 +133,7 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.21.1-R0.1-SNAPSHOT</version>
+			<version>1.21.4-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -170,12 +170,12 @@
 		    <artifactId>AnnotationConfig</artifactId>
 		    <version>e9eab24</version>
 		</dependency>
-		<dependency>
-            <groupId>io.papermc.paper</groupId>
-            <artifactId>paper-api</artifactId>
-            <version>1.21.4-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+<!--		<dependency>-->
+<!--            <groupId>io.papermc.paper</groupId>-->
+<!--            <artifactId>paper-api</artifactId>-->
+<!--            <version>1.21.4-R0.1-SNAPSHOT</version>-->
+<!--            <scope>provided</scope>-->
+<!--        </dependency>-->
         <dependency>
   			<groupId>com.sk89q.worldguard</groupId>
   			<artifactId>worldguard-bukkit</artifactId>
