@@ -369,7 +369,8 @@ public class ClaimLease extends BoughtTransaction {
             claim.addPlayerPermissions(buyer, ClaimPermission.BUILD);
             claim.addPlayerPermissions(player.getUniqueId(), ClaimPermission.MANAGE);
             RealEstate.claimAPI.saveClaim(claim);
-            getHolder().breakNaturally(); // Leases do not show remaining time on sign.
+            if(RealEstate.instance.config.cfgDestroyLeaseSigns)
+                getHolder().breakNaturally(); // Leases do not show remaining time on sign.
             update();
             RealEstate.transactionsStore.saveData();
 
