@@ -389,8 +389,9 @@ public class ClaimRent extends BoughtTransaction {
             Messages.sendMessage(player, RealEstate.instance.messages.msgInfoClaimBuyerRented,
                     claimTypeDisplay,
                     RealEstate.econ.format(price));
-            
-            destroySign();
+
+            if(RealEstate.instance.config.cfgDestroyRentSigns)
+                destroySign();
         }
     }
     
