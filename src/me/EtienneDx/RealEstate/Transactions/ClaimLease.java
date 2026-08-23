@@ -16,7 +16,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.earth2me.essentials.User;
+import me.EtienneDx.RealEstate.TransactionEventType;
 
 import me.EtienneDx.RealEstate.Messages;
 import me.EtienneDx.RealEstate.RealEstate;
@@ -150,7 +150,6 @@ public class ClaimLease extends BoughtTransaction {
             return;
 
         OfflinePlayer buyerPlayer = Bukkit.getOfflinePlayer(buyer);
-        OfflinePlayer seller = owner == null ? null : Bukkit.getOfflinePlayer(owner);
         
         String claimType = RealEstate.claimAPI.getClaimAt(sign).isParentClaim()
                 ? RealEstate.instance.messages.keywordClaim
@@ -162,67 +161,17 @@ public class ClaimLease extends BoughtTransaction {
             lastPayment = LocalDateTime.now();
             paymentsLeft--;
             if (paymentsLeft > 0) {
-                if (buyerPlayer.isOnline() && RealEstate.instance.config.cfgMessageBuyer) {
-                    Messages.sendMessage(buyerPlayer.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentBuyer,
-                            claimType,
-                            location, 
-                            RealEstate.econ.format(price), 
-                            paymentsLeft + "");
-                } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                    User u = RealEstate.ess.getUser(this.buyer);
-                    u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentBuyer,
-                            claimType,
-                            location, 
-                            RealEstate.econ.format(price), 
-                            paymentsLeft + ""));
-                }
-                
+                Utils.notify(this.buyer, RealEstate.instance.config.cfgMessageBuyer, TransactionEventType.LEASE_PAYMENT_BUYER,
+                        null, claimType, location, RealEstate.econ.format(price), paymentsLeft + "");
                 if (owner != null) {
-                    if (seller != null && seller.isOnline() && RealEstate.instance.config.cfgMessageOwner) {
-                        Messages.sendMessage(seller.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentOwner,
-                                buyerPlayer.getName(),
-                                claimType,
-                                location, 
-                                RealEstate.econ.format(price), 
-                                paymentsLeft + "");
-                    } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                        User u = RealEstate.ess.getUser(this.owner);
-                        u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentOwner,
-                                buyerPlayer.getName(),
-                                claimType,
-                                location,
-                                RealEstate.econ.format(price),
-                                paymentsLeft + ""));
-                    }
+                    Utils.notify(this.owner, RealEstate.instance.config.cfgMessageOwner, TransactionEventType.LEASE_PAYMENT_OWNER,
+                            buyerPlayer.getName(), claimType, location, RealEstate.econ.format(price), paymentsLeft + "");
                 }
             } else {
-                if (buyerPlayer.isOnline() && RealEstate.instance.config.cfgMessageBuyer) {
-                    Messages.sendMessage(buyerPlayer.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentBuyerFinal,
-                            claimType,
-                            location, 
-                            RealEstate.econ.format(price));
-                } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                    User u = RealEstate.ess.getUser(this.buyer);
-                    u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentBuyerFinal,
-                            claimType,
-                            location,
-                            RealEstate.econ.format(price)));
-                }
-                
-                if (seller != null && seller.isOnline() && RealEstate.instance.config.cfgMessageOwner) {
-                    Messages.sendMessage(seller.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentOwnerFinal,
-                            buyerPlayer.getName(),
-                            claimType,
-                            location, 
-                            RealEstate.econ.format(price));
-                } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                    User u = RealEstate.ess.getUser(this.owner);
-                    u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentOwnerFinal,
-                            buyerPlayer.getName(),
-                            claimType,
-                            location,
-                            RealEstate.econ.format(price)));
-                }
+                Utils.notify(this.buyer, RealEstate.instance.config.cfgMessageBuyer, TransactionEventType.LEASE_PAYMENT_BUYER_FINAL,
+                        null, claimType, location, RealEstate.econ.format(price));
+                Utils.notify(this.owner, RealEstate.instance.config.cfgMessageOwner, TransactionEventType.LEASE_PAYMENT_OWNER_FINAL,
+                        buyerPlayer.getName(), claimType, location, RealEstate.econ.format(price));
                 IClaim claim = RealEstate.claimAPI.getClaimAt(sign);
                 Utils.transferClaim(claim, buyer, owner);
                 RealEstate.transactionsStore.cancelTransaction(this); // Lease is complete.
@@ -243,7 +192,6 @@ public class ClaimLease extends BoughtTransaction {
     private void exitLease() {
         if (buyer != null) {
             OfflinePlayer buyerPlayer = Bukkit.getOfflinePlayer(buyer);
-            OfflinePlayer seller = owner == null ? null : Bukkit.getOfflinePlayer(owner);
             
             IClaim claim = RealEstate.claimAPI.getClaimAt(sign);
             
@@ -254,32 +202,10 @@ public class ClaimLease extends BoughtTransaction {
                     sign.getBlockX() + ", Y: " +
                     sign.getBlockY() + ", Z: " + sign.getBlockZ() + "]";
             
-            if (buyerPlayer.isOnline() && RealEstate.instance.config.cfgMessageBuyer) {
-                Messages.sendMessage(buyerPlayer.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentBuyerCancelled,
-                        claimType,
-                        location, 
-                        RealEstate.econ.format(price));
-            } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                User u = RealEstate.ess.getUser(this.buyer);
-                u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentBuyerCancelled,
-                        claimType,
-                        location,
-                        RealEstate.econ.format(price)));
-            }
-            if (seller != null && seller.isOnline() && RealEstate.instance.config.cfgMessageOwner) {
-                Messages.sendMessage(seller.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentOwnerCancelled,
-                        buyerPlayer.getName(),
-                        claimType,
-                        location, 
-                        RealEstate.econ.format(price));
-            } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                User u = RealEstate.ess.getUser(this.owner);
-                u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoLeasePaymentOwnerCancelled,
-                        buyerPlayer.getName(),
-                        claimType,
-                        location,
-                        RealEstate.econ.format(price)));
-            }
+            Utils.notify(this.buyer, RealEstate.instance.config.cfgMessageBuyer, TransactionEventType.LEASE_CANCEL_BUYER,
+                    null, claimType, location, RealEstate.econ.format(price));
+            Utils.notify(this.owner, RealEstate.instance.config.cfgMessageOwner, TransactionEventType.LEASE_CANCEL_OWNER,
+                    buyerPlayer.getName(), claimType, location, RealEstate.econ.format(price));
             
             claim.removeManager(buyer);
             claim.dropPlayerPermissions(buyer);
@@ -386,23 +312,8 @@ public class ClaimLease extends BoughtTransaction {
                     " Price: " + price + " " + RealEstate.econ.currencyNamePlural());
 
             if (owner != null) {
-                OfflinePlayer seller = Bukkit.getOfflinePlayer(owner);
-                if (RealEstate.instance.config.cfgMessageOwner && seller.isOnline()) {
-                    Messages.sendMessage(seller.getPlayer(), RealEstate.instance.messages.msgInfoClaimOwnerLeaseStarted,
-                            player.getName(),
-                            claimTypeDisplay,
-                            RealEstate.econ.format(price),
-                            location,
-                            paymentsLeft + "");
-                } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                    User u = RealEstate.ess.getUser(this.owner);
-                    u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimOwnerLeaseStarted,
-                            player.getName(),
-                            claimTypeDisplay,
-                            RealEstate.econ.format(price),
-                            location,
-                            paymentsLeft + ""));
-                }
+                Utils.notify(this.owner, RealEstate.instance.config.cfgMessageOwner, TransactionEventType.LEASE_START_OWNER,
+                        player.getName(), claimTypeDisplay, location, RealEstate.econ.format(price), paymentsLeft + "");
             }
             
             Messages.sendMessage(player, RealEstate.instance.messages.msgInfoClaimBuyerLeaseStarted,

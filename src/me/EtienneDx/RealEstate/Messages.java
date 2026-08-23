@@ -1283,6 +1283,72 @@ public class Messages extends AnnotationConfig {
     public String msgListNextPage = "$6To see the next page, type $a/re list {0} {1}";
 
     /**
+     * Header for a player's own transaction log.
+     * <p>
+     * Placeholders: {0} - current page; {1} - total pages.
+     * </p>
+     */
+    @ConfigField(name = "RealEstate.Transactions.Header", comment = "0: page number; 1: page count")
+    public String msgTransactionsHeader = "$1----= $f[ $6Your transactions page $2 {0} $6/ $2{1} $f] $1=----";
+
+    /**
+     * Header when an admin views another player's transaction log.
+     * <p>
+     * Placeholders: {0} - player name; {1} - current page; {2} - total pages.
+     * </p>
+     */
+    @ConfigField(name = "RealEstate.Transactions.AdminHeader", comment = "0: player name; 1: page number; 2: page count")
+    public String msgTransactionsAdminHeader = "$1----= $f[ $6{0}'s transactions page $2 {1} $6/ $2{2} $f] $1=----";
+
+    /**
+     * Message when a player has no recorded transactions.
+     */
+    @ConfigField(name = "RealEstate.Transactions.Empty")
+    public String msgTransactionsEmpty = "$bNo recorded transactions.";
+
+    /**
+     * Next-page hint for a player's own transaction log.
+     * <p>
+     * Placeholders: {0} - next page number.
+     * </p>
+     */
+    @ConfigField(name = "RealEstate.Transactions.NextPage", comment = "0: next page number")
+    public String msgTransactionsNextPage = "$6To see the next page, type $a/re transactions {0}";
+
+    /**
+     * Next-page hint when viewing another player's transaction log.
+     * <p>
+     * Placeholders: {0} - player name; {1} - next page number.
+     * </p>
+     */
+    @ConfigField(name = "RealEstate.Transactions.AdminNextPage", comment = "0: player name; 1: next page number")
+    public String msgTransactionsAdminNextPage = "$6To see the next page, type $a/re transactions {0} {1}";
+
+    /**
+     * Error when the named player cannot be resolved.
+     * <p>
+     * Placeholders: {0} - player name.
+     * </p>
+     */
+    @ConfigField(name = "RealEstate.Transactions.PlayerNotFound", comment = "0: player name")
+    public String msgTransactionsPlayerNotFound = "$cPlayer {0} was not found.";
+
+    /**
+     * Error when a player tries to view another player's transactions without permission.
+     */
+    @ConfigField(name = "RealEstate.Transactions.NoPermission")
+    public String msgTransactionsNoPermission = "$cYou do not have permission to view another player's transactions.";
+
+    /**
+     * Join reminder for unread transactions.
+     * <p>
+     * Placeholders: {0} - unread count.
+     * </p>
+     */
+    @ConfigField(name = "RealEstate.Transactions.UnreadReminder", comment = "0: unread count")
+    public String msgTransactionsUnreadReminder = "$bYou have $a{0} $bunread real estate transaction(s). Type $a/re transactions $bto view them.";
+
+    /**
      * Sign message displaying the highest bidder in an auction.
      * <p>
      * Placeholders: {0} - bidder name; {1} - formatted price.

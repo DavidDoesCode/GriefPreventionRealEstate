@@ -1,6 +1,7 @@
 package me.EtienneDx.RealEstate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -8,8 +9,6 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import com.earth2me.essentials.User;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.CommandHelp;
@@ -180,6 +179,161 @@ public class RECommand extends BaseCommand
             }
         }
     }
+
+    /**
+     * Shows recorded transaction events for the sender, or for another player if permitted.
+     *
+     * @param sender the command sender
+     * @param targetOrPage optional page number or player name
+     * @param page page number when a player name is given
+     */
+    @Subcommand("transactions")
+    @Description("Shows your recent real estate transactions; admins can specify a player")
+    @CommandPermission("realestate.info")
+    @CommandCompletion("@players")
+    @Syntax("[page]|<player> [page]")
+    @SuppressWarnings("deprecation")
+    public static void transactions(CommandSender sender, @Optional String targetOrPage, @Default("1") int page)
+    {
+        UUID targetId;
+        String targetName = null;
+        boolean markRead = false;
+        int resolvedPage = page;
+
+        if (targetOrPage != null && isAllDigits(targetOrPage))
+        {
+            if (!(sender instanceof Player))
+            {
+                Messages.sendMessage(sender, RealEstate.instance.messages.msgErrorPlayerOnly);
+                return;
+            }
+            try
+            {
+                resolvedPage = Integer.parseInt(targetOrPage);
+            }
+            catch (NumberFormatException e)
+            {
+                Messages.sendMessage(sender, RealEstate.instance.messages.msgPageMustBePositive);
+                return;
+            }
+            targetId = ((Player) sender).getUniqueId();
+            markRead = true;
+        }
+        else if (targetOrPage != null)
+        {
+            if (!sender.hasPermission("realestate.admin"))
+            {
+                Messages.sendMessage(sender, RealEstate.instance.messages.msgTransactionsNoPermission);
+                return;
+            }
+            OfflinePlayer target = Bukkit.getOfflinePlayer(targetOrPage);
+            if (!target.isOnline() && !target.hasPlayedBefore())
+            {
+                Messages.sendMessage(sender, RealEstate.instance.messages.msgTransactionsPlayerNotFound, targetOrPage);
+                return;
+            }
+            targetId = target.getUniqueId();
+            targetName = target.getName() != null ? target.getName() : targetOrPage;
+        }
+        else
+        {
+            if (!(sender instanceof Player))
+            {
+                Messages.sendMessage(sender, RealEstate.instance.messages.msgErrorPlayerOnly);
+                return;
+            }
+            targetId = ((Player) sender).getUniqueId();
+            markRead = true;
+        }
+
+        showTransactionLog(sender, targetId, targetName, resolvedPage, markRead);
+    }
+
+    private static boolean isAllDigits(String value)
+    {
+        if (value == null || value.isEmpty())
+        {
+            return false;
+        }
+        for (int i = 0; i < value.length(); i++)
+        {
+            if (!Character.isDigit(value.charAt(i)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static void showTransactionLog(CommandSender sender, UUID targetId, String targetName, int page, boolean markRead)
+    {
+        if (page <= 0)
+        {
+            Messages.sendMessage(sender, RealEstate.instance.messages.msgPageMustBePositive);
+            return;
+        }
+        TransactionLog log = RealEstate.transactionLog;
+        if (log == null)
+        {
+            Messages.sendMessage(sender, RealEstate.instance.messages.msgTransactionsEmpty);
+            return;
+        }
+        int count = log.count(targetId);
+        if (count == 0)
+        {
+            Messages.sendMessage(sender, RealEstate.instance.messages.msgTransactionsEmpty);
+            if (markRead)
+            {
+                log.markRead(targetId);
+            }
+            return;
+        }
+        int pageSize = RealEstate.instance.config.cfgPageSize;
+        int start = (page - 1) * pageSize;
+        int pageCount = (int) Math.ceil(count / (double) pageSize);
+        if (start >= count)
+        {
+            Messages.sendMessage(sender, RealEstate.instance.messages.msgPageNotExists);
+            return;
+        }
+        if (targetName != null)
+        {
+            Messages.sendMessage(sender, RealEstate.instance.messages.msgTransactionsAdminHeader,
+                    targetName, String.valueOf(page), String.valueOf(pageCount));
+        }
+        else
+        {
+            Messages.sendMessage(sender, RealEstate.instance.messages.msgTransactionsHeader,
+                    String.valueOf(page), String.valueOf(pageCount));
+        }
+        long lastRead = log.getLastRead(targetId);
+        List<TransactionRecord> rows = log.list(targetId, start, pageSize);
+        Messages messages = RealEstate.instance.messages;
+        for (TransactionRecord row : rows)
+        {
+            String line = row.type.format(messages, row);
+            if (row.createdAt > lastRead)
+            {
+                line = TransactionLog.emphasizeUnread(line);
+            }
+            Messages.sendMessage(sender, line, Boolean.FALSE);
+        }
+        if (page < pageCount)
+        {
+            if (targetName != null)
+            {
+                Messages.sendMessage(sender, messages.msgTransactionsAdminNextPage, targetName, String.valueOf(page + 1));
+            }
+            else
+            {
+                Messages.sendMessage(sender, messages.msgTransactionsNextPage, String.valueOf(page + 1));
+            }
+        }
+        if (markRead)
+        {
+            log.markRead(targetId);
+        }
+    }
     
     /**
      * Allows a player to view or change the automatic renew status of a rent transaction.
@@ -315,24 +469,13 @@ public class RECommand extends BaseCommand
             UUID other = player.getUniqueId().equals(bt.owner) ? bt.buyer : bt.owner;
             if(other != null) // not an admin claim
             {
-                OfflinePlayer otherP = Bukkit.getOfflinePlayer(other);
                 Location loc = player.getLocation();
                 String claimType = RealEstate.claimAPI.getClaimAt(loc).isParentClaim() ? 
                     RealEstate.instance.messages.keywordClaim : RealEstate.instance.messages.keywordSubclaim;
                 String location = "[" + loc.getWorld().getName() + ", X: " + loc.getBlockX() + ", Y: " + loc.getBlockY() + ", Z: "
                     + loc.getBlockZ() + "]";
-
-                if(otherP.isOnline())
-                {
-                    Messages.sendMessage(otherP.getPlayer(), RealEstate.instance.messages.msgInfoExitOfferCreatedByOther, 
-                            player.getName(), claimType, RealEstate.econ.format(price), location);
-                }
-                else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null)
-                {
-                    User u = RealEstate.ess.getUser(other);
-                    u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoExitOfferCreatedByOther, 
-                            player.getName(), claimType, RealEstate.econ.format(price), location));
-                }
+                Utils.notify(other, true, TransactionEventType.EXIT_CREATED,
+                        player.getName(), claimType, location, RealEstate.econ.format(price));
             }
         }
         
@@ -367,18 +510,8 @@ public class RECommand extends BaseCommand
                     ", Z: " + loc.getBlockZ() + "]";
                 if(other != null)
                 {
-                    OfflinePlayer otherP = Bukkit.getOfflinePlayer(other);
-                    if(otherP.isOnline())
-                    {
-                        Messages.sendMessage(otherP.getPlayer(), RealEstate.instance.messages.msgInfoExitOfferAcceptedByOther, 
-                                player.getName(), claimType, RealEstate.econ.format(bt.exitOffer.price), location);
-                    }
-                    else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null)
-                    {
-                        User u = RealEstate.ess.getUser(other);
-                        u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoExitOfferAcceptedByOther,
-                                player.getName(), claimType, RealEstate.econ.format(bt.exitOffer.price), location));
-                    }
+                    Utils.notify(other, true, TransactionEventType.EXIT_ACCEPTED,
+                            player.getName(), claimType, location, RealEstate.econ.format(bt.exitOffer.price));
                 }
                 bt.exitOffer = null;
                 claim.dropPlayerPermissions(bt.buyer);
@@ -420,18 +553,8 @@ public class RECommand extends BaseCommand
                     ", Z: " + loc.getBlockZ() + "]";
                 if(other != null)
                 {
-                    OfflinePlayer otherP = Bukkit.getOfflinePlayer(other);
-                    if(otherP.isOnline())
-                    {
-                        Messages.sendMessage(otherP.getPlayer(), RealEstate.instance.messages.msgInfoExitOfferRejectedByOther, 
-                                player.getName(), claimType, location);
-                    }
-                    else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null)
-                    {
-                        User u = RealEstate.ess.getUser(other);
-                        u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoExitOfferRejectedByOther,
-                                player.getName(), claimType, location));
-                    }
+                    Utils.notify(other, true, TransactionEventType.EXIT_REJECTED,
+                            player.getName(), claimType, location, null);
                 }
             }
         }
@@ -459,18 +582,8 @@ public class RECommand extends BaseCommand
                     ", Z: " + loc.getBlockZ() + "]";
                 if(other != null)
                 {
-                    OfflinePlayer otherP = Bukkit.getOfflinePlayer(other);
-                    if(otherP.isOnline())
-                    {
-                        Messages.sendMessage(otherP.getPlayer(), RealEstate.instance.messages.msgInfoExitOfferCancelledByOther, 
-                                player.getName(), claimType, location);
-                    }
-                    else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null)
-                    {
-                        User u = RealEstate.ess.getUser(other);
-                        u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoExitOfferCancelledByOther,
-                                player.getName(), claimType, location));
-                    }
+                    Utils.notify(other, true, TransactionEventType.EXIT_CANCELLED,
+                            player.getName(), claimType, location, null);
                 }
             }
             else

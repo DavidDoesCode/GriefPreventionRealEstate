@@ -14,10 +14,9 @@ import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.earth2me.essentials.User;
-
 import me.EtienneDx.RealEstate.Messages;
 import me.EtienneDx.RealEstate.RealEstate;
+import me.EtienneDx.RealEstate.TransactionEventType;
 import me.EtienneDx.RealEstate.Utils;
 import me.EtienneDx.RealEstate.RealEstateSign;
 import me.EtienneDx.RealEstate.ClaimAPI.ClaimPermission;
@@ -212,52 +211,16 @@ public class ClaimRent extends BoughtTransaction {
         
         if(autoRenew && Utils.makePayment(owner, this.buyer, price, false, false)) {
             startDate = LocalDateTime.now();
-            if(buyerPlayer.isOnline() && RealEstate.instance.config.cfgMessageBuyer) {
-                Messages.sendMessage(buyerPlayer.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoRentPaymentBuyer,
-                        claimType,
-                        location,
-                        RealEstate.econ.format(price));
-            }
-            else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                User u = RealEstate.ess.getUser(this.buyer);
-                u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoRentPaymentBuyer,
-                        claimType,
-                        location,
-                        RealEstate.econ.format(price)));
-            }
-            
+            Utils.notify(this.buyer, RealEstate.instance.config.cfgMessageBuyer, TransactionEventType.RENT_PAYMENT_BUYER,
+                    null, claimType, location, RealEstate.econ.format(price));
             if(seller != null) {
-                if(seller.isOnline() && RealEstate.instance.config.cfgMessageOwner) {
-                    Messages.sendMessage(seller.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoRentPaymentOwner,
-                            buyerPlayer.getName(),
-                            claimType,
-                            location,
-                            RealEstate.econ.format(price));
-                }
-                else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                    User u = RealEstate.ess.getUser(this.owner);
-                    u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoRentPaymentOwner,
-                            buyerPlayer.getName(),
-                            claimType,
-                            location,
-                            RealEstate.econ.format(price)));
-                }
+                Utils.notify(this.owner, RealEstate.instance.config.cfgMessageOwner, TransactionEventType.RENT_PAYMENT_OWNER,
+                        buyerPlayer.getName(), claimType, location, RealEstate.econ.format(price));
             }
         }
         else if (autoRenew) {
-            if(buyerPlayer.isOnline() && RealEstate.instance.config.cfgMessageBuyer) {
-                Messages.sendMessage(buyerPlayer.getPlayer(), RealEstate.instance.messages.msgInfoClaimInfoRentPaymentBuyerCancelled,
-                        claimType,
-                        location,
-                        RealEstate.econ.format(price));
-            }
-            else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                User u = RealEstate.ess.getUser(this.buyer);
-                u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimInfoRentPaymentBuyerCancelled,
-                        claimType,
-                        location,
-                        RealEstate.econ.format(price)));
-            }
+            Utils.notify(this.buyer, RealEstate.instance.config.cfgMessageBuyer, TransactionEventType.RENT_CANCEL_BUYER,
+                    null, claimType, location, RealEstate.econ.format(price));
             unRent(false);
             return;
         }
@@ -363,27 +326,12 @@ public class ClaimRent extends BoughtTransaction {
                     "Price: " + price + " " + RealEstate.econ.currencyNamePlural());
             
             if(owner != null) {
-                OfflinePlayer seller = Bukkit.getOfflinePlayer(owner);
                 String location = "[" + sign.getWorld().getName() + ", " + 
                         "X: " + sign.getBlockX() + ", " + 
                         "Y: " + sign.getBlockY() + ", " + 
                         "Z: " + sign.getBlockZ() + "]";
-            
-                if(RealEstate.instance.config.cfgMessageOwner && seller.isOnline()) {
-                    Messages.sendMessage(seller.getPlayer(), RealEstate.instance.messages.msgInfoClaimOwnerRented,
-                            player.getName(),
-                            claimTypeDisplay,
-                            RealEstate.econ.format(price),
-                            location);
-                }
-                else if(RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                    User u = RealEstate.ess.getUser(this.owner);
-                    u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimOwnerRented,
-                            player.getName(),
-                            claimTypeDisplay,
-                            RealEstate.econ.format(price),
-                            location));
-                }
+                Utils.notify(owner, RealEstate.instance.config.cfgMessageOwner, TransactionEventType.RENT_START_OWNER,
+                        player.getName(), claimTypeDisplay, location, RealEstate.econ.format(price));
             }
             
             Messages.sendMessage(player, RealEstate.instance.messages.msgInfoClaimBuyerRented,

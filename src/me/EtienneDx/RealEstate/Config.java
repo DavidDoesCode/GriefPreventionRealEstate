@@ -220,9 +220,9 @@ public class Config extends AnnotationConfig {
     public boolean cfgBroadcastSell = true;
 
     /**
-     * Whether offline owners/buyers should receive mail notifications.
+     * Whether players with unread transactions should be reminded on join until they run /re transactions.
      */
-    @ConfigField(name="RealEstate.Messaging.MailOffline", comment = "Should offline owners/buyers receive mails (using the Essentials plugin) when they're offline?")
+    @ConfigField(name="RealEstate.Messaging.MailOffline", comment = "Should players be reminded on join about unread transactions until they run /re transactions?")
     public boolean cfgMailOffline = true;
 
     // Default pricing and duration configurations

@@ -408,6 +408,21 @@ RealEstate:
     # 0: all|sell|rent|lease; 1:
       # next page number
     NextPage: $6To see the next page, type $a/re list {0} {1}
+  Transactions:
+    # 0: page number; 1: page count
+    Header: $1----= $f[ $6Your transactions page $2 {0} $6/ $2{1} $f] $1=----
+    # 0: player name; 1: page number; 2: page count
+    AdminHeader: $1----= $f[ $6{0}'s transactions page $2 {1} $6/ $2{2} $f] $1=----
+    Empty: $bNo recorded transactions.
+    # 0: next page number
+    NextPage: $6To see the next page, type $a/re transactions {0}
+    # 0: player name; 1: next page number
+    AdminNextPage: $6To see the next page, type $a/re transactions {0} {1}
+    # 0: player name
+    PlayerNotFound: $cPlayer {0} was not found.
+    NoPermission: $cYou do not have permission to view another player's transactions.
+    # 0: unread count
+    UnreadReminder: $bYou have $a{0} $bunread real estate transaction(s). Type $a/re transactions $bto view them.
   Sign:
     Auction:
       # 0: player name, 1:

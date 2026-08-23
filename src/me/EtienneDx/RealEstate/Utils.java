@@ -211,4 +211,56 @@ public class Utils
             str = str.substring(0, 16);
         return str;
     }
+
+    /**
+     * Records a player-facing transaction event and chats if the player is online.
+     *
+     * @param playerId player to notify; ignored if null
+     * @param chatEnabled whether live chat should be sent when the player is online
+     * @param type event type
+     * @param otherName other player name, or null
+     * @param claimType claim/subclaim keyword
+     * @param location formatted location
+     * @param amount formatted amount
+     */
+    public static void notify(UUID playerId, boolean chatEnabled, TransactionEventType type,
+            String otherName, String claimType, String location, String amount) {
+        notify(playerId, chatEnabled, type, otherName, claimType, location, amount, null);
+    }
+
+    /**
+     * Records a player-facing transaction event and chats if the player is online.
+     *
+     * @param playerId player to notify; ignored if null
+     * @param chatEnabled whether live chat should be sent when the player is online
+     * @param type event type
+     * @param otherName other player name, or null
+     * @param claimType claim/subclaim keyword
+     * @param location formatted location
+     * @param amount formatted amount
+     * @param extra extra placeholder (e.g. remaining payments), or null
+     */
+    public static void notify(UUID playerId, boolean chatEnabled, TransactionEventType type,
+            String otherName, String claimType, String location, String amount, String extra) {
+        if (playerId == null || type == null) {
+            return;
+        }
+        if (RealEstate.transactionLog != null) {
+            RealEstate.transactionLog.record(playerId, type, otherName, claimType, location, amount, extra);
+        }
+        if (!chatEnabled) {
+            return;
+        }
+        OfflinePlayer offline = Bukkit.getOfflinePlayer(playerId);
+        if (!offline.isOnline() || offline.getPlayer() == null) {
+            return;
+        }
+        TransactionRecord record = new TransactionRecord();
+        record.otherName = otherName;
+        record.claimType = claimType;
+        record.location = location;
+        record.amount = amount;
+        record.extra = extra;
+        Messages.sendMessage(offline.getPlayer(), type.format(RealEstate.instance.messages, record), false);
+    }
 }

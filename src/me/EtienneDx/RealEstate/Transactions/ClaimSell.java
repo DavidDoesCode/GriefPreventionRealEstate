@@ -1,9 +1,9 @@
 package me.EtienneDx.RealEstate.Transactions;
 
 import org.bukkit.entity.Player;
-import com.earth2me.essentials.User;
 import me.EtienneDx.RealEstate.Messages;
 import me.EtienneDx.RealEstate.RealEstate;
+import me.EtienneDx.RealEstate.TransactionEventType;
 import me.EtienneDx.RealEstate.Utils;
 import me.EtienneDx.RealEstate.RealEstateSign;
 import me.EtienneDx.RealEstate.ClaimAPI.IClaim;
@@ -161,17 +161,8 @@ public class ClaimSell extends ClaimTransaction {
                         "Y: " + player.getLocation().getBlockY() + ", " +
                         "Z: " + player.getLocation().getBlockZ() + "] " +
                         "Price: " + price + " " + RealEstate.econ.currencyNamePlural());
-                if (RealEstate.instance.config.cfgMessageOwner && owner != null) {
-                    OfflinePlayer oldOwner = Bukkit.getOfflinePlayer(owner);
-                    if (oldOwner.isOnline()) {
-                        Messages.sendMessage(oldOwner.getPlayer(), RealEstate.instance.messages.msgInfoClaimOwnerSold,
-                                player.getName(), claimTypeDisplay, RealEstate.econ.format(price), location);
-                    } else if (RealEstate.instance.config.cfgMailOffline && RealEstate.ess != null) {
-                        User u = RealEstate.ess.getUser(owner);
-                        u.addMail(Messages.getMessage(RealEstate.instance.messages.msgInfoClaimOwnerSold,
-                                player.getName(), claimTypeDisplay, RealEstate.econ.format(price), location));
-                    }
-                }
+                Utils.notify(owner, RealEstate.instance.config.cfgMessageOwner, TransactionEventType.CLAIM_SOLD,
+                        player.getName(), claimTypeDisplay, location, RealEstate.econ.format(price));
             } else {
                 Messages.sendMessage(player, RealEstate.instance.messages.msgErrorUnexpected);
                 return;

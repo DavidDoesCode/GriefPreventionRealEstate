@@ -19,7 +19,6 @@ import java.util.stream.Stream;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import com.earth2me.essentials.Essentials;
 import co.aikar.commands.BukkitCommandManager;
 import co.aikar.commands.ConditionFailedException;
 import me.EtienneDx.RealEstate.ClaimAPI.IClaim;
@@ -42,7 +41,7 @@ import net.milkbowl.vault.permission.Permission;
  * <p>
  * This plugin manages claim transactions such as selling, renting, leasing, and auctioning.
  * It integrates with several claim management APIs (GriefPrevention, GriefDefender, WorldGuard, Towny)
- * and external plugins (Vault, Essentials) to provide its functionality.
+ * and Vault for economy and permissions.
  * </p>
  */
 public class RealEstate extends JavaPlugin {
@@ -81,14 +80,14 @@ public class RealEstate extends JavaPlugin {
     /** The permission provider from Vault. */
     public static Permission perms = null;
     
-    /** Essentials plugin instance, if available. */
-    public static Essentials ess = null;
-    
     /** Singleton instance of the RealEstate plugin. */
     public static RealEstate instance = null;
     
     /** The transactions store for managing claim transactions. */
     public static TransactionsStore transactionsStore = null;
+
+    /** Player-facing transaction event log (SQLite). */
+    public static TransactionLog transactionLog = null;
     
     /** The active claim management API implementation. */
     public static IClaimAPI claimAPI = null;
@@ -153,10 +152,6 @@ public class RealEstate extends JavaPlugin {
             return;
         }
 
-        if((ess = (Essentials)getServer().getPluginManager().getPlugin("Essentials")) != null)
-        {
-            this.log.info("Found Essentials, using version " + ess.getDescription().getVersion());
-        }
         checkForOldFiles();
         this.config = new Config();
         this.config.loadConfig(); // loads config or default
@@ -173,6 +168,8 @@ public class RealEstate extends JavaPlugin {
         ConfigurationSerialization.registerClass(ExitOffer.class);
         
         RealEstate.transactionsStore = new TransactionsStore();
+        RealEstate.transactionLog = new TransactionLog();
+        RealEstate.transactionLog.open();
         
         new REListener().registerEvents();
         
@@ -184,6 +181,16 @@ public class RealEstate extends JavaPlugin {
         copyResourcesIntoPluginDirectory();
         
         activateMetrics();
+    }
+
+    /**
+     * Closes the transaction log database.
+     */
+    @Override
+    public void onDisable() {
+        if (RealEstate.transactionLog != null) {
+            RealEstate.transactionLog.close();
+        }
     }
     
     private void activateMetrics() {

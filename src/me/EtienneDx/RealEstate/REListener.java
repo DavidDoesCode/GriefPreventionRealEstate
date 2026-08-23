@@ -12,6 +12,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.PluginManager;
 
@@ -39,6 +40,24 @@ public class REListener implements Listener {
     void registerEvents() {
         PluginManager pm = RealEstate.instance.getServer().getPluginManager();
         pm.registerEvents(this, RealEstate.instance);
+    }
+
+    /**
+     * Reminds joining players about unread transactions until they run /re transactions.
+     *
+     * @param event the join event
+     */
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (!RealEstate.instance.config.cfgMailOffline || RealEstate.transactionLog == null) {
+            return;
+        }
+        Player player = event.getPlayer();
+        int unread = RealEstate.transactionLog.unreadCount(player.getUniqueId());
+        if (unread <= 0) {
+            return;
+        }
+        Messages.sendMessage(player, RealEstate.instance.messages.msgTransactionsUnreadReminder, 40L, String.valueOf(unread));
     }
 
     /**
