@@ -102,10 +102,6 @@
 	        <id>ess-repo</id>
 	        <url>https://ci.ender.zone/plugin/repository/everything/</url>
 	    </repository>
-		<repository>
-	        <id>glaremasters</id>
-	        <url>https://repo.glaremasters.me/repository/bloodshot</url>
-	    </repository>
 	    <repository>
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
@@ -157,12 +153,6 @@
 		    <groupId>com.github.GriefPrevention</groupId>
 		    <artifactId>GriefPrevention</artifactId>
 		    <version>16.18.4</version>
-		    <scope>provided</scope>
-		</dependency>
-		<dependency>
-		    <groupId>com.github.bloodmc</groupId>
-		    <artifactId>GriefDefenderAPI</artifactId>
-		    <version>master-4e5f379629-1</version>
 		    <scope>provided</scope>
 		</dependency>
 	    <dependency>
